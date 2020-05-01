@@ -5,6 +5,8 @@ using System.Net;
 using System.Text;
 using System.Collections;
 using System.Linq;
+using System.Threading;
+using System.Diagnostics;
 
 namespace MitProject
 {
@@ -16,6 +18,7 @@ namespace MitProject
         {
             Console.OutputEncoding = Encoding.UTF8;
             string[] https = { "https://youtu.be/g0e4dyA3f24", "https://www.youtube.com/watch?v=YGXS4uEdT3Q", "https://www.youtube.com/watch?v=iFGve5MUUnE", "https://www.youtube.com/watch?v=7W0IFAGyqwo", "https://www.youtube.com/watch?v=7W0ISI3yqwo", "https://www.youtube.com/watch?v=7NOPE" };
+            //string[] https = { "https://www.youtube.com/watch?v=LRyFFarTu5Q", "https://www.youtube.com/watch?v=1wimO3w5nBI", "https://www.youtube.com/watch?v=CzLsKm3sYO0", "https://www.youtube.com/watch?v=0A00AeXuQZ8", "https://www.youtube.com/watch?v=nRJxvqYwicE" };
             List<Video> videos = new List<Video>();
 
             for (int i = 0; i < 5; i++)
@@ -215,7 +218,7 @@ namespace MitProject
             Console.ForegroundColor = ConsoleColor.White;
             Console.Clear();
 
-            print(x, y, "Thumbnail:\n     "+vid.Imgpath);
+            print(x, y, "Thumbnail:\n     " + vid.Imgpath+"\n     press delete to view the thumbnail");
             print(x, y + 7, "Title:\n     " + vid.Title);
             print(x, y+10, "Views:\n     " + vid.Views);
 
@@ -239,18 +242,22 @@ namespace MitProject
             string input = Convert.ToString(info.KeyChar).ToUpper();
             bool run = true;
 
-            while (info.Key == ConsoleKey.Tab || input == " " || run || info.Key == ConsoleKey.Escape)
+            while (info.Key == ConsoleKey.Tab || input == " " || run || info.Key == ConsoleKey.Escape || info.Key == ConsoleKey.Delete)
             {
                 if (run == false) { 
                     info = Console.ReadKey(true);
                     input = Convert.ToString(info.KeyChar).ToUpper();
                 } run = false;
 
+                if (info.Key == ConsoleKey.Delete) {
+                    DisplayThumbnail(vid.Imgpath);
+                }
+
                 int descLines = 1;
                 if (info.Key == ConsoleKey.Tab && vid.Description.Length > 0) //if tab
                 {
                     Console.Clear();
-                    print(x, y, "Thumbnail:\n     " + vid.Imgpath);
+                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press delete to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
                     int descLength = 0;
@@ -267,10 +274,10 @@ namespace MitProject
                             descLength += extend_desc[i].Length; descLines++;
                         }
                     }
-                    print(x, y + dsc + descLines-3 , "press ESCAPE");
+                    print(x, y + dsc + descLines-3 , "press escape to view less");
                     if (descLines > 0) descLines--;
                     if (keylen > 40) { print(x, y + dsc+ descLines, "Tags:\n     " + vid.Keywords.Substring(0, 40) + " ...");
-                        print(x, y + dsc + descLines + 1, "press space to view more tags");
+                        print(x, y + dsc + descLines + 2, "press space to view more tags");
                     }
                     else
                     {
@@ -282,7 +289,7 @@ namespace MitProject
                 if (input == " " && vid.Keywords.Length>0) //if space
                 {
                     Console.Clear();
-                    print(x, y, "Thumbnail:\n     " + vid.Imgpath);
+                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press delete to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
                     if (dsclen > 50) { print(x, y + 13, "Description:\n     " + vid.Description.Substring(0, 50) + " ...");
@@ -298,13 +305,13 @@ namespace MitProject
                         Console.Write(tags[i] + " ");
                         if (i % 8 == 0 && i != 0) { Console.Write("\n     "); }
                     }
-                    Console.Write("                                                                             ");
+                    Console.Write("                                                                             "+"\n     press escape to view less");
                 }
 
                 if (info.Key == ConsoleKey.Escape) //if escape 
                 {
                     Console.Clear();
-                    print(x, y, "Thumbnail:\n     " + vid.Imgpath);
+                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press delete to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
 
@@ -337,6 +344,16 @@ namespace MitProject
         static void print(int x, int y, string s)
         {
             Console.SetCursorPosition(x, y); Console.WriteLine(s);
+        }
+
+        static void DisplayThumbnail(string url) {
+            using (WebClient client = new WebClient())
+            {
+                string imgname = url.Substring(url.Length - 25, 25).Replace("/","-");
+                client.DownloadFile(new Uri(url), imgname);
+                Thread.Sleep(3000);
+                Process.Start(imgname);
+            }
         }
     }
 
