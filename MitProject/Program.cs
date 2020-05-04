@@ -17,34 +17,81 @@ namespace MitProject
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-            string[] https = { "https://youtu.be/g0e4dyA3f24", "https://www.youtube.com/watch?v=YGXS4uEdT3Q", "https://www.youtube.com/watch?v=iFGve5MUUnE", "https://www.youtube.com/watch?v=7W0IFAGyqwo", "https://www.youtube.com/watch?v=7W0ISI3yqwo", "https://www.youtube.com/watch?v=7NOPE" };
-            //string[] https = { "https://www.youtube.com/watch?v=LRyFFarTu5Q", "https://www.youtube.com/watch?v=1wimO3w5nBI", "https://www.youtube.com/watch?v=CzLsKm3sYO0", "https://www.youtube.com/watch?v=0A00AeXuQZ8", "https://www.youtube.com/watch?v=nRJxvqYwicE" };
+            List<string> https = new List<string>();
+            //List<string> https = new List<string>{"https://youtu.be/g0e4dyA3f24", "https://www.youtube.com/watch?v=YGXS4uEdT3Q", "https://www.youtube.com/watch?v=iFGve5MUUnE", "https://www.youtube.com/watch?v=7W0IFAGyqwo", "https://www.youtube.com/watch?v=7W0ISI3yqwo", "https://www.youtube.com/watch?v=7NOPE" };
             List<Video> videos = new List<Video>();
+            List<string> menu = new List<string> { "","  1. Add Url(s)","  2. Remove Url(s)","  3. Display Video Data", "  4. Load Url(s) from urls.dat", "ESC. Exit" };
+            bool run = true;
 
-            for (int i = 0; i < 5; i++)
+            while (run)
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(https[i]);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                StreamReader sr = new StreamReader(response.GetResponseStream());
-                string allLines = sr.ReadToEnd();
-                int id = videos.Count;
-                if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines,id)); }
+                Console.Clear();
+                foreach (string s in menu)
+                {
+                    Console.WriteLine("     " + s);
+                }
+
+                ConsoleKeyInfo info = Console.ReadKey(true);
+
+                int.TryParse((info.KeyChar).ToString(), out int input);
+
+                if (info.Key == ConsoleKey.Escape) { break; }
+                else if (input == 1) {
+                    string[] ms = UserUrl();
+                    if (ms[0] != "")
+                    {
+                        foreach (string s in ms)
+                        {
+                            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(s);
+                            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                            StreamReader sr = new StreamReader(response.GetResponseStream());
+                            string allLines = sr.ReadToEnd();
+                            int id = videos.Count;
+                            if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); https.Add(s); }
+                        }
+                    }
+                }
+                else if (input == 2) { string[] ms = UserUrl(); if (ms[0] != "") { foreach (string s in ms) { https.Remove(s); } } }
+                else if (input == 3) { foreach (Video v in videos) { DisplayVideoData(videos[v.Id]); } }  // display video data
+                else if (input == 4)
+                {
+                    string[] ms = FileUrl();
+                    if (ms[0] != "")
+                    {
+                        foreach (string s in ms) { https.Add(s); }
+                        menu[4] = "  4. Load Url(s) from urls.dat - Already loaded";
+                    }
+                    for (int i = 0; i < ms.Length; i++)
+                    {
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(https[i]);
+                        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                        StreamReader sr = new StreamReader(response.GetResponseStream());
+                        string allLines = sr.ReadToEnd();
+                        int id = videos.Count;
+                        if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); }
+                    }
+                }
+
+                else
+                {
+                    Console.WriteLine("     Error. Please press one of the keys shown above.\n     Press any key to return.");
+                    Console.ReadKey(true);
+                }
             }
+        }
+
+        static string[] UserUrl()
+        {
             Console.Clear();
-            /*
-            Console.WriteLine(videos[0].Id);
-            Console.WriteLine(videos[0].Title);
-            Console.WriteLine(videos[0].Description);
-            Console.WriteLine(videos[0].Views);
-            Console.WriteLine(videos[0].Imgpath);
-            Console.WriteLine(videos[0].Keywords);
-            Console.ReadKey(true);
-            */
-            foreach (Video v in videos)
-            {
-                DisplayVideoData(videos[v.Id]);
-            }
-            Console.ReadKey(true);
+            Console.WriteLine("     Please enter your YouTube url(s) in the following way:\n     https://www.youtube.com/watch?v=dQw4w9WgXcQ (single url)\n     url , url (multiple urls, split by commas)\n     Press enter after entering your url(s) or before, if you want to exit.");
+            string s = Console.ReadLine();
+            string[] ms = s.Split(',');
+            return ms;
+        }
+
+        static string[] FileUrl() {
+            string[] ms = File.ReadAllLines("urls.dat");
+            return ms;
         }
 
         static bool VideoExists(string s)
@@ -134,6 +181,7 @@ namespace MitProject
                     { create.Keywords += tags[k]+" "; }
 
                     create.Keywords = FormatVideoData(create, "keywords");
+                    if (create.Keywords == null) { create.Keywords = " "; }
                 }
 
                 else if (allLines[i].Contains("watch-view-count"))
@@ -144,6 +192,9 @@ namespace MitProject
                 }
 
             }
+            if (create.Keywords == null) { create.Keywords = "None"; }
+            if (create.Description == null) { create.Description = "None"; }
+            if (string.IsNullOrWhiteSpace(create.Description)) { create.Description = "None"; }
             return create;
         }
 
@@ -198,6 +249,7 @@ namespace MitProject
             }
             if (type == "keywords") {
                 string tags = vid.Keywords.Substring(1, vid.Keywords.Length-1);
+                if (tags == "") { tags = "None"; }
                 return tags;
             }
             if (type == "views") {
@@ -214,6 +266,7 @@ namespace MitProject
         static void DisplayVideoData(Video vid)
         {
             int x = 5, y = 3, dsc = 17;
+            int keylen = 0;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Clear();
@@ -226,27 +279,26 @@ namespace MitProject
             if(dsclen > 50){print(x, y + 13, "Description:\n     " + vid.Description.Substring(0, 50)+" ...");
                 print(x, y + 15, "press tab to view more description");
             }
-            else{print(x, y + 13, vid.Description);
+            else{print(x, y + 13, "Description:\n     " + vid.Description);
             }
 
-            int keylen = vid.Keywords.Length;
+            try { keylen = Convert.ToInt32(vid.Keywords.Length); } catch { }
+
             if (keylen > 40) { print(x, y+dsc, "Tags:\n     " + vid.Keywords.Substring(0, 40) + " ...");
                 print(x, y + dsc + 2, "press space to view more tags");
             }
             else {
-                if (vid.Keywords.Length == 0) { print(x, y + dsc, "Tags:\n     None"); }
-                else { print(x, y + dsc, vid.Keywords); }
+                if (keylen == 0) { print(x, y + dsc, "Tags:\n     None"); }
+                else { print(x, y + dsc, "Tags:\n     "+vid.Keywords); }
             }
 
             ConsoleKeyInfo info = Console.ReadKey(true);
-            string input = Convert.ToString(info.KeyChar).ToUpper();
             bool run = true;
 
-            while (info.Key == ConsoleKey.Tab || input == " " || run || info.Key == ConsoleKey.Escape || info.Key == ConsoleKey.Delete)
+            while (info.Key == ConsoleKey.Tab || info.Key == ConsoleKey.Spacebar|| run || info.Key == ConsoleKey.Escape || info.Key == ConsoleKey.Delete)
             {
                 if (run == false) { 
                     info = Console.ReadKey(true);
-                    input = Convert.ToString(info.KeyChar).ToUpper();
                 } run = false;
 
                 if (info.Key == ConsoleKey.Delete) {
@@ -281,12 +333,12 @@ namespace MitProject
                     }
                     else
                     {
-                        if (vid.Keywords.Length == 0) { Console.Write("Tags:\n     None"); }
-                        else { print(x, y + dsc, vid.Keywords); }
+                        if (keylen == 0) { Console.Write("Tags:\n     None"); }
+                        else { print(x, y + dsc, "Tags:\n     " + vid.Keywords); }
                     }
                 }
 
-                if (input == " " && vid.Keywords.Length>0) //if space
+                if (info.Key == ConsoleKey.Spacebar && vid.Keywords.Length>0) //if space
                 {
                     Console.Clear();
                     print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press delete to view the thumbnail");
@@ -323,7 +375,7 @@ namespace MitProject
                     }
                     else
                     {
-                        print(x, y + 13, vid.Description);
+                        print(x, y + 13, "Description:\n     " + vid.Description);
                     }
 
                     keylen = vid.Keywords.Length;
@@ -335,7 +387,7 @@ namespace MitProject
                     else
                     {
                         if (vid.Keywords.Length == 0) { print(x, y + dsc, "Tags:\n     None"); }
-                        else { print(x, y + dsc, vid.Keywords); }
+                        else { print(x, y + dsc, "Tags:\n     " + vid.Keywords); }
                     }
                 }
             }
