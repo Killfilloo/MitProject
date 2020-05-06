@@ -7,6 +7,7 @@ using System.Collections;
 using System.Linq;
 using System.Threading;
 using System.Diagnostics;
+using HtmlAgilityPack;
 
 namespace MitProject
 {
@@ -44,12 +45,20 @@ namespace MitProject
                     {
                         foreach (string s in ms)
                         {
-                            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(s);
-                            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                            StreamReader sr = new StreamReader(response.GetResponseStream());
-                            string allLines = sr.ReadToEnd();
-                            int id = videos.Count;
-                            if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); https.Add(s); }
+                            try
+                            {
+                                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(s);
+                                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                                StreamReader sr = new StreamReader(response.GetResponseStream());
+                                string allLines = sr.ReadToEnd();
+                                int id = videos.Count;
+                                if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); https.Add(s); }
+                            }
+                            catch
+                            {
+                                print(5,7, "Error. Invalid url.\n     Press any key to return.");
+                                Console.ReadKey(true);
+                            }
                         }
                     }
                 }
@@ -94,7 +103,7 @@ namespace MitProject
 
                 else
                 {
-                    Console.WriteLine("     Error. Please press one of the keys shown above.\n     Press any key to return.");
+                    print(5,9,"Error. Please press one of the keys shown above.\n     Press any key to return.");
                     Console.ReadKey(true);
                 }
             }
@@ -104,7 +113,7 @@ namespace MitProject
         {
             Console.Clear();
             Console.WriteLine("     Please enter your YouTube url(s) in the following way:\n     https://www.youtube.com/watch?v=dQw4w9WgXcQ (single url)\n     url , url (multiple urls, split by commas)\n     Press enter after entering your url(s) or before, if you want to exit.");
-            string s = Console.ReadLine();
+            Console.Write("\n     "); string s = Console.ReadLine();
             string[] ms = s.Split(',');
             return ms;
         }
@@ -230,6 +239,22 @@ namespace MitProject
             }
             if (type == "description") {
                 string description = vid.Description.Substring(1, vid.Description.Length - 1);
+
+                /*
+                borrowed code from Stackoverflow:
+                https://stackoverflow.com/questions/18153998/how-do-i-remove-all-html-tags-from-a-string-without-knowing-which-tags-are-in-it
+                comments by ssilas777
+                and Thierry_S
+                */
+
+                HtmlDocument htmlDoc = new HtmlDocument();
+                htmlDoc.LoadHtml(description);
+
+                string result = WebUtility.HtmlDecode(description);
+                result = htmlDoc.DocumentNode.InnerText;
+                description = result;
+
+                /*
                 description = description.Replace("<br />", "\n");
                 //description = description.Replace("<a href=", "");
                 int start = 0, stop = 0;
@@ -265,6 +290,7 @@ namespace MitProject
                 {
                     description += s + " ";
                 }
+                */
                 return description;
             }
             if (type == "keywords") {
@@ -290,15 +316,15 @@ namespace MitProject
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Clear();
-            print(x, 1, "Press C to view the Controls");
+            print(x, 1, "press "); color("C");  print(x+7,1," to view the Controls");
 
-            print(x, y, "Thumbnail:\n     " + vid.Imgpath+"\n     press DELETE to view the thumbnail");
+            print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x+12, y+2, " to view the thumbnail");
             print(x, y + 7, "Title:\n     " + vid.Title);
             print(x, y+10, "Views:\n     " + vid.Views);
 
             int dsclen = vid.Description.Length;
             if(dsclen > 50){print(x, y + 13, "Description:\n     " + vid.Description.Substring(0, 50)+" ...");
-                print(x, y + 15, "press UP ARROW to view more description");
+                print(x, y + 15, "press "); color("UP ARROW"); print(x+14, y + 15, " to view more description");
             }
             else{print(x, y + 13, "Description:\n     " + vid.Description);
             }
@@ -306,7 +332,7 @@ namespace MitProject
             try { keylen = Convert.ToInt32(vid.Keywords.Length); } catch { }
 
             if (keylen > 40) { print(x, y+dsc, "Tags:\n     " + vid.Keywords.Substring(0, 40) + " ...");
-                print(x, y + dsc + 2, "press DOWN ARROW to view more tags");
+                print(x, y + dsc + 2, "press "); color("DOWN ARROW"); print(x+16, y + dsc + 2, " to view more tags");
             }
             else {
                 if (keylen == 0) { print(x, y + dsc, "Tags:\n     None"); }
@@ -315,7 +341,7 @@ namespace MitProject
 
             ConsoleKeyInfo info = Console.ReadKey(true);
             bool run = true;
-
+            
             while(info.Key != ConsoleKey.LeftArrow && info.Key != ConsoleKey.RightArrow && info.Key != ConsoleKey.Escape || run)
             {
                 if (run == false)
@@ -333,12 +359,12 @@ namespace MitProject
                 if (info.Key == ConsoleKey.UpArrow && vid.Description.Length > 0) //extend decription, up arrow
                 {
                     Console.Clear();
-                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press DELETE to view the thumbnail");
+                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x + 12, y + 2, " to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
                     int descLength = 0;
                     print(x, y + 13, "Description:");
-                    Console.Write("     ");
+                    Console.Write("\n     ");
                     string[] extend_desc = vid.Description.Split(' ');
                     for (int i = 0; i < extend_desc.Length; i++)
                     {
@@ -350,50 +376,50 @@ namespace MitProject
                             descLength += extend_desc[i].Length; descLines++;
                         }
                     }
-                    print(x, y + dsc + descLines - 3, "press ENTER to view less");
+                    print(x, y + dsc + descLines - 3, "press "); color("ENTER"); print(x+11, y + dsc + descLines - 3," to view less");
                     if (descLines > 0) descLines--;
                     if (keylen > 40)
                     {
-                        print(x, y + dsc + descLines, "Tags:\n     " + vid.Keywords.Substring(0, 40) + " ...");
-                        print(x, y + dsc + descLines + 2, "press DOWN ARROW to view more tags");
+                        print(x, y + dsc + descLines, "Tags: \n     " + vid.Keywords.Substring(0, 40) + " ...");
+                        print(x, y + dsc + descLines + 2, "press "); color("DOWN ARROW"); print(x+ 15, y + dsc + descLines + 2, " to view more tags");
                     }
                     else
                     {
-                        if (keylen == 0) { Console.Write("Tags:\n     None"); }
-                        else { print(x, y + dsc, "Tags:\n     " + vid.Keywords); }
+                        print(x, y + dsc + descLines, "Tags:\n     " + vid.Keywords); 
                     }
                 }
-
+                
                 if (info.Key == ConsoleKey.DownArrow && vid.Keywords.Length > 0) //extend tags, down arrow
                 {
                     Console.Clear();
-                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press DELETE to view the thumbnail");
+                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x + 12, y + 2, " to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
                     if (dsclen > 50)
                     {
                         print(x, y + 13, "Description:\n     " + vid.Description.Substring(0, 50) + " ...");
-                        print(x, y + 15, "press UP ARROW to view more description");
+                        print(x, y + 15, "press "); color("UP ARROW"); print(x+14,y+15," to view more description");
                     }
                     else
                     {
                         print(x, y + 13, "Description:\n     " + vid.Description);
                     }
                     print(x, y + dsc, "Tags:");
-                    Console.Write("     ");
+                    Console.Write("\n     ");
                     string[] tags = vid.Keywords.Split(' ');
+                    int taglen = 0;
                     for (int i = 0; i < tags.Length; i++)
                     {
                         Console.Write(tags[i] + " ");
-                        if (i % 8 == 0 && i != 0) { Console.Write("\n     "); }
+                        if (i % 8 == 0 && i != 0) { Console.Write("\n     "); taglen++; }
                     }
-                    Console.Write("                                                                             " + "\n     press ENTER to view less");
+                    print(5, 22+taglen, "press "); color("ENTER"); print(16, 22+taglen, " to view less");
                 }
 
                 if (info.Key == ConsoleKey.Enter) //minimize, enter
                 {
                     Console.Clear();
-                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press DELETE to view the thumbnail");
+                    print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x + 12, y + 2, " to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
 
@@ -401,22 +427,23 @@ namespace MitProject
                     if (dsclen > 50)
                     {
                         print(x, y + 13, "Description:\n     " + vid.Description.Substring(0, 50) + " ...");
-                        print(x, y + 15, "press UP ARROW to view more description");
+                        print(x, y + 15, "press "); color("UP ARROW"); print(x + 14, y + 15, " to view more description");
                     }
                     else
                     {
                         print(x, y + 13, "Description:\n     " + vid.Description);
                     }
 
-                    keylen = vid.Keywords.Length;
+                    try { keylen = Convert.ToInt32(vid.Keywords.Length); } catch { }
+
                     if (keylen > 40)
                     {
                         print(x, y + dsc, "Tags:\n     " + vid.Keywords.Substring(0, 40) + " ...");
-                        print(x, y + dsc + 2, "press DOWN ARROW to view more tags");
+                        print(x, y + dsc + 2, "press "); color("DOWN ARROW"); print(x + 16, y + dsc + 2, " to view more tags");
                     }
                     else
                     {
-                        if (vid.Keywords.Length == 0) { print(x, y + dsc, "Tags:\n     None"); }
+                        if (keylen == 0) { print(x, y + dsc, "Tags:\n     None"); }
                         else { print(x, y + dsc, "Tags:\n     " + vid.Keywords); }
                     }
                 }
@@ -439,15 +466,23 @@ namespace MitProject
                     print(5, 8, "ENTER"); print(20, 8, "Minimize");
                     print(5, 9, "ESCAPE"); print(20, 9, "Exit / return to menu");
 
-                    print(5, 11, "Press ENTER to return.");
+                    print(5, 11, "Press "); color("ENTER"); print(16,11," to return."); 
                 }
+                
             }
-            return ConsoleKey.C;
+                return ConsoleKey.C;
         }
 
         static void print(int x, int y, string s)
         {
-            Console.SetCursorPosition(x, y); Console.WriteLine(s);
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.SetCursorPosition(x, y); Console.Write(s);
+        }
+
+        static void color(string s)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(s);
         }
 
         static void DisplayThumbnail(string url) {

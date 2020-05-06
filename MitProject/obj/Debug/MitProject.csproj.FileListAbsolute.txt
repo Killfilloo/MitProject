@@ -46,3 +46,6 @@ C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\obj\Debug\MitProject.
 C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\obj\Debug\MitProject.csproj.CopyComplete
 C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\obj\Debug\MitProject.exe
 C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\obj\Debug\MitProject.pdb
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\HtmlAgilityPack.dll
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\HtmlAgilityPack.pdb
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\HtmlAgilityPack.xml
