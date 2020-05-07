@@ -49,3 +49,8 @@ C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\obj\Debug\MitProject.
 C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\HtmlAgilityPack.dll
 C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\HtmlAgilityPack.pdb
 C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\HtmlAgilityPack.xml
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\libvideo.dll
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\System.Diagnostics.DiagnosticSource.dll
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\YoutubeExtractor.dll
+C:\Users\KILLFILL\Desktop\BP_projekt\MitProject\MitProject\bin\Debug\YoutubeExtractor.xml
