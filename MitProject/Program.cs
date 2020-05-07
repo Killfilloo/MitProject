@@ -21,9 +21,11 @@ namespace MitProject
         {
             Console.OutputEncoding = Encoding.UTF8;
             List<string> https = new List<string>(); // https is a list of url strings.
+            List<string> hist = new List<string>(); // hist is a list of url strings.
             List<Video> videos = new List<Video>(); // vidoes is the list of video objects, containing all of the information fetched.
-            List<string> menu = new List<string> { "\n\n", "  1. Add Url(s)", "  2. Remove Url(s)", "  3. Display Video Data", "  4. Load Url(s) from urls.dat", "ESC. Exit" };
+            List<string> menu = new List<string> { "\n\n", "  1. Add Url(s)", "  2. Remove Url(s)", "  3. Display Video Data", "  4. Load Url(s) from urls.dat", "  5. 10 last urls","ESC. Exit" };
             using (StreamWriter w = File.AppendText("urls.dat")); //Creates the urls.dat file to read from, if file do not exist.
+            using (StreamWriter w = File.AppendText("hist.dat")); //Creates the hist.dat file to read from, if file do not exist.
 
 
             bool run = true;
@@ -31,17 +33,15 @@ namespace MitProject
             while (run)
             {
                 Console.Clear();
-                foreach (string s in menu)
-                {
-                    Console.WriteLine("     " + s);
-                }
-                print(7, 1, https.Count + " urls loaded");
+                foreach(string s in menu){ Console.WriteLine("     " + s); }
+                if(https.Count == 1){ print(7, 1, https.Count + " url loaded"); }
+                else{ print(7, 1, https.Count + " urls loaded"); }
 
                 ConsoleKeyInfo info = Console.ReadKey(true);
 
                 int.TryParse((info.KeyChar).ToString(), out int input);
 
-                if (info.Key == ConsoleKey.Escape) { break; }
+                if (info.Key == ConsoleKey.Escape) { SaveHist(hist); break; }
                 else if (input == 1)
                 {
                     string[] ms = UserUrl();
@@ -56,7 +56,7 @@ namespace MitProject
                                 StreamReader sr = new StreamReader(response.GetResponseStream());
                                 string allLines = sr.ReadToEnd();
                                 int id = videos.Count;
-                                if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); https.Add(s); }
+                                if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); https.Add(s); hist.Add(s); }
                             }
                             catch
                             {
@@ -96,7 +96,7 @@ namespace MitProject
                     string[] ms = FileUrl();
                     if (ms[0] != "")
                     {
-                        foreach (string s in ms) { https.Add(s); }
+                        foreach (string s in ms) { https.Add(s); hist.Add(s); }
                     }
                     for (int i = 0; i < ms.Length; i++)
                     {
@@ -108,7 +108,9 @@ namespace MitProject
                         print(5, 1, "                              ");
                         if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); print(7, 1, i + " of " + ms.Length + " urls loaded"); }//temp?
                     }
+                    // save hist
                 }
+                else if (input == 5) { DisplayHist(hist); }
 
                 else
                 {
@@ -131,6 +133,31 @@ namespace MitProject
         {
             string[] ms = File.ReadAllLines("urls.dat");
             return ms;
+        }
+
+        static void SaveHist(List<string> ls)
+        {
+            string[] ms = File.ReadAllLines("hist.dat");
+            TextWriter tw = new StreamWriter("hist.dat");
+
+            ls.Reverse();
+            foreach (string s in ms) ls.Add(s);
+            if (ls.Count > 10) { ls.RemoveRange(10,ls.Count-10); }
+
+            foreach (string s in ls) { tw.WriteLine(s); }
+
+            tw.Close();
+        }
+        static void DisplayHist(List<string> ls) {
+            SaveHist(ls);
+            string[] ms = File.ReadAllLines("hist.dat");
+            Console.Clear();
+            Console.SetCursorPosition(0, 3); Console.WriteLine("     History of last "+ms.Length+" urls \n");
+            foreach (string s in ms)
+            {
+                Console.WriteLine("     "+s);
+            }
+            Console.ReadKey(true);
         }
 
         static bool VideoExists(string s)
