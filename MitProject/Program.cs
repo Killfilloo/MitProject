@@ -23,26 +23,23 @@ namespace MitProject
             List<string> https = new List<string>(); // https is a list of url strings.
             List<string> hist = new List<string>(); // hist is a list of url strings.
             List<Video> videos = new List<Video>(); // vidoes is the list of video objects, containing all of the information fetched.
-            List<string> menu = new List<string> { "\n\n", "  1. Add Url(s)", "  2. Remove Url(s)", "  3. Display Video Data", "  4. Load Url(s) from urls.dat", "  5. 10 last urls","ESC. Exit" };
+            List<string> menu = new List<string> { "\n\n", "  1. Add Url(s)", "  2. Remove Url(s)", "  3. Display Video Data", "  4. Load Url(s) from urls.dat", "  5. 10 last urls","ESC. Exit" }; //menu categories
             using (StreamWriter w = File.AppendText("urls.dat")); //Creates the urls.dat file to read from, if file do not exist.
             using (StreamWriter w = File.AppendText("hist.dat")); //Creates the hist.dat file to read from, if file do not exist.
 
-
-            bool run = true;
-
-            while (run)
+            while (true)
             {
                 Console.Clear();
-                foreach(string s in menu){ Console.WriteLine("     " + s); }
-                if(https.Count == 1){ print(7, 1, https.Count + " url loaded"); }
-                else{ print(7, 1, https.Count + " urls loaded"); }
+                foreach(string s in menu){ Console.WriteLine("     " + s); } // print each element in the string-list menu
+                if(https.Count == 1){ print(7, 1, https.Count + " url loaded"); } // print 1 url loaded
+                else{ print(7, 1, https.Count + " urls loaded"); } // or print 0 || 2+ urls loaded
 
                 ConsoleKeyInfo info = Console.ReadKey(true);
 
-                int.TryParse((info.KeyChar).ToString(), out int input);
+                int.TryParse((info.KeyChar).ToString(), out int input); // trying to parse the ConsoleKeyInfo to a int
 
-                if (info.Key == ConsoleKey.Escape) { SaveHist(hist); break; }
-                else if (input == 1)
+                if (info.Key == ConsoleKey.Escape) { SaveHist(hist); break; } // if escape is pressed (exit) the history is saved and the main loop breaks;
+                else if (input == 1) // if input is 1 it goes to UserUrl which asks for url inputs.
                 {
                     string[] ms = UserUrl();
                     if (ms[0] != "")
@@ -51,27 +48,28 @@ namespace MitProject
                         {
                             try
                             {
-                                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(s);
-                                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                                StreamReader sr = new StreamReader(response.GetResponseStream());
-                                string allLines = sr.ReadToEnd();
+                                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(s); // an youtube api webrequest is created
+                                HttpWebResponse response = (HttpWebResponse)request.GetResponse(); // the response is stored in response.
+                                StreamReader sr = new StreamReader(response.GetResponseStream()); 
+                                string allLines = sr.ReadToEnd(); // when all of the stream have ended, its added to a string allLines
                                 int id = videos.Count;
-                                if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); https.Add(s); hist.Add(s); }
+                                if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); https.Add(s); hist.Add(s); } // if the url exists, the video is created, its added to the history, and to the loaded url list
                             }
                             catch
                             {
-                                print(5, 7, "Error. Invalid url.\n     Press any key to return.");
-                                Console.ReadKey(true);
+                                print(5, 7, "Error. Invalid url.\n     Press any key to return."); // If url doesnt exists
+                                Console.ReadKey(true); // pause, true indicates no output to console.
                             }
                         }
                     }
                 }
                 else if (input == 2) { string[] ms = UserUrl(); if (ms[0] != "") { foreach (string s in ms) { try { videos.RemoveAt(https.IndexOf(s)); https.Remove(s); } catch { Console.WriteLine("URL not found. Press any key to return"); Console.ReadKey(true); } } } }
-                else if (input == 3)
+                // The above is the function to remove a entry. Both from the videos (Video object), the url in https
+                else if (input == 3) // if the input is 3 its displaying video data.
                 {
-                    for (int i = 0; i < videos.Count;)
+                    for (int i = 0; i < videos.Count;) // for loop so the index can be better controlled
                     {
-                        ConsoleKey response = DisplayVideoData(videos[i]);
+                        ConsoleKey response = DisplayVideoData(videos[i],i,videos.Count); // displays the video with index i
 
                         if (response == ConsoleKey.Escape)
                         { break; } //Escape, back to menu
@@ -81,9 +79,9 @@ namespace MitProject
                             {
                                 i--;
                             }
-                        } //Left arrow, < backwards
+                        } //Left arrow, < backwards, i--
                         if (response == ConsoleKey.RightArrow)
-                        { if (i != videos.Count) i++; } //Right Arrow, > forwards
+                        { if (i != videos.Count) i++; } //Right Arrow, > forwards, i++
                         if (response == ConsoleKey.End)
                         {
                             OpenURL(https[i]);
@@ -91,12 +89,12 @@ namespace MitProject
 
                     }
                 }  // display video data
-                else if (input == 4)
+                else if (input == 4) // input 4 loads urls from the FileUrl metode. Which points to the urls.dat file
                 {
                     string[] ms = FileUrl();
                     if (ms[0] != "")
                     {
-                        foreach (string s in ms) { https.Add(s); hist.Add(s); }
+                        foreach (string s in ms) { https.Add(s); hist.Add(s); } // for each entry, add it to the urls and history lists
                     }
                     for (int i = 0; i < ms.Length; i++)
                     {
@@ -106,13 +104,14 @@ namespace MitProject
                         string allLines = sr.ReadToEnd();
                         int id = videos.Count;
                         print(5, 1, "                              ");
-                        if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); print(7, 1, i + " of " + ms.Length + " urls loaded"); }//temp?
+                        if (VideoExists(allLines)) { videos.Add(CreateVideo(allLines, id)); print(7, 1, i + " of " + ms.Length + " urls loaded"); } // displays the progress x of y urls loaded at the top.
                     }
                     // save hist
                 }
-                else if (input == 5) { DisplayHist(hist); }
 
-                else
+                else if (input == 5) { DisplayHist(hist); } // if input is 5, the history is displayed
+
+                else // Error message and a pause if any other key is pressed.
                 {
                     print(5, 9, "Error. Please press one of the keys shown above.\n     Press any key to return.");
                     Console.ReadKey(true);
@@ -120,7 +119,7 @@ namespace MitProject
             }
         }
 
-        static string[] UserUrl()
+        static string[] UserUrl() // method to load urls by user input.
         {
             Console.Clear();
             Console.WriteLine("     Please enter your YouTube url(s) in the following way:\n     https://www.youtube.com/watch?v=dQw4w9WgXcQ (single url)\n     url , url (multiple urls, split by commas)\n     Press enter after entering your url(s) or before, if you want to exit.");
@@ -129,26 +128,26 @@ namespace MitProject
             return ms;
         }
 
-        static string[] FileUrl()
+        static string[] FileUrl() // method to load urls by file.
         {
             string[] ms = File.ReadAllLines("urls.dat");
             return ms;
         }
 
-        static void SaveHist(List<string> ls)
+        static void SaveHist(List<string> ls) // saves the hist list to the hist.dat file
         {
             string[] ms = File.ReadAllLines("hist.dat");
             TextWriter tw = new StreamWriter("hist.dat");
 
-            ls.Reverse();
-            foreach (string s in ms) ls.Add(s);
-            if (ls.Count > 10) { ls.RemoveRange(10,ls.Count-10); }
+            ls.Reverse(); // reverse order, 
+            foreach (string s in ms) ls.Add(s); // adds the new urls to the back of the list.
+            if (ls.Count > 10) { ls.RemoveRange(10,ls.Count-10); } // removes any urls past 10.
 
-            foreach (string s in ls) { tw.WriteLine(s); }
+            foreach (string s in ls) { tw.WriteLine(s); } // writes the urls to file (saves)
 
-            tw.Close();
+            tw.Close(); // closes the connection with file
         }
-        static void DisplayHist(List<string> ls) {
+        static void DisplayHist(List<string> ls) { // method to load and display urls from history.
             SaveHist(ls);
             string[] ms = File.ReadAllLines("hist.dat");
             Console.Clear();
@@ -160,7 +159,7 @@ namespace MitProject
             Console.ReadKey(true);
         }
 
-        static bool VideoExists(string s)
+        static bool VideoExists(string s) // checks if the Video contains "eow-title" amongst its long string, if it doesnt, url isnt valid.
         {
             if (s != null)
             {
@@ -356,15 +355,17 @@ namespace MitProject
             return "error occured";
         }
 
-        static ConsoleKey DisplayVideoData(Video vid)
+        static ConsoleKey DisplayVideoData(Video vid, int id, int tot)
         {
-            int x = 5, y = 4, dsc = 17;
+            id += 1;
+            int x = 5, y = 6, dsc = 17;
             int keylen = 0;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Clear();
             controls();
-            print(x, 1, "press "); color("END"); print(x + 9, 1, " to view the video in browser");
+            print(x, 1, "Displaying video "); color(id.ToString()); print(x + 18 + id.ToString().Length, 1, "of " + tot);
+            print(x, 3, "press "); color("END"); print(x + 9, 3, " to view the video in browser");
 
             print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x + 12, y + 2, " to view the thumbnail");
             print(x, y + 7, "Title:\n     " + vid.Title);
@@ -415,7 +416,8 @@ namespace MitProject
                 {
                     Console.Clear();
                     controls();
-                    print(x, 1, "press "); color("END"); print(x + 9, 1, " to view the video in browser");
+                    print(x, 1, "Displaying video "); color(id.ToString()); print(x + 18+ id.ToString().Length, 3, " of "+tot);
+                    print(x, 3, "press "); color("END"); print(x + 9, 3, " to view the video in browser");
                     print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x + 12, y + 2, " to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
@@ -450,7 +452,8 @@ namespace MitProject
                 {
                     Console.Clear();
                     controls();
-                    print(x, 1, "press "); color("END"); print(x + 9, 1, " to view the video in browser");
+                    print(x, 1, "Displaying video "); color(id.ToString()); print(x + 18 + id.ToString().Length, 3, " of " + tot);
+                    print(x, 3, "press "); color("END"); print(x + 9, 3, " to view the video in browser");
                     print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x + 12, y + 2, " to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
@@ -479,7 +482,8 @@ namespace MitProject
                 {
                     Console.Clear();
                     controls();
-                    print(x, 1, "press "); color("END"); print(x + 9, 1, " to view the video in browser");
+                    print(x, 1, "Displaying video "); color(id.ToString()); print(x + 18 + id.ToString().Length, 3, " of " + tot);
+                    print(x, 3, "press "); color("END"); print(x + 9, 3, " to view the video in browser");
                     print(x, y, "Thumbnail:\n     " + vid.Imgpath + "\n     press "); color("DELETE"); print(x + 12, y + 2, " to view the thumbnail");
                     print(x, y + 7, "Title:\n     " + vid.Title);
                     print(x, y + 10, "Views:\n     " + vid.Views);
@@ -522,16 +526,17 @@ namespace MitProject
         static void controls()
         {
             Console.Clear();
-            print(75, 1, "Controls"); print(90, 1, "Functions");
+            int i = 2;
+            print(75, 1+i, "Controls"); print(90, 1 + i, "Functions");
 
-            print(75, 3, "DOWN ARROW"); print(90, 3, "Show more tags");
-            print(75, 4, "UP ARROW"); print(90, 4, "Show more description");
-            print(75, 5, "LEFT ARROW"); print(90, 5, "Show previous video");
-            print(75, 6, "RIGHT ARROW"); print(90, 6, "Show next video");
-            print(75, 7, "DELETE"); print(90, 7, "Show thumbnail");
-            print(75, 8, "END"); print(90, 8, "Open in browser");
-            print(75, 9, "ENTER"); print(90, 9, "Minimize");
-            print(75, 10, "ESCAPE"); print(90, 10, "Exit / return to menu");
+            print(75, 3 + i, "DOWN ARROW"); print(90, 3 + i, "Show more tags");
+            print(75, 4 + i, "UP ARROW"); print(90, 4 + i, "Show more description");
+            print(75, 5 + i, "LEFT ARROW"); print(90, 5 + i, "Show previous video");
+            print(75, 6 + i, "RIGHT ARROW"); print(90, 6 + i, "Show next video");
+            print(75, 7 + i, "DELETE"); print(90, 7 + i, "Show thumbnail");
+            print(75, 8 + i, "END"); print(90, 8 + i, "Open in browser");
+            print(75, 9 + i, "ENTER"); print(90, 9 + i, "Minimize");
+            print(75, 10 + i, "ESCAPE"); print(90, 10 + i, "Exit / return to menu");
         }
 
         static void print(int x, int y, string s)
